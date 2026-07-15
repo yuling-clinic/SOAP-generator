@@ -523,7 +523,7 @@ function render(){
   if(has("cc_dur"))cc+=` noted ${conn} ${t("cc_dur")}`;
   if(has("cc_with"))cc+=`, came with ${t("cc_with")}`;
 
-  const birth=`Birth hx: G${t("g")} P${t("p")}, GA${t("ga")} wks, BBW: ${t("bbw")} gm, ${S.seg.delivery}, `+parts("birth").join(", ")+sgaNote;
+  const birth=`Birth hx: G${t("g")} P${t("p")}, GA ${t("ga")} wks, BBW: ${t("bbw")} gm, ${S.seg.delivery}, `+parts("birth").join(", ")+sgaNote;
   const fam=`Father ${t("fa_ht")} cm, delayed puberty(${on("fa","fa_delay")?"+":"-"})\nMother ${t("mo_ht")} cm, menarche at ${t("mo_men")} y\nTarget height ${thOut} cm`;
 
   const ph=[birth];
