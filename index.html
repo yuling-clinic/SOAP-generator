@@ -272,8 +272,9 @@
       <div class="body">
         <div class="row"><div class="field"><span class="lead">Bone age 日期</span><input type="text" data-f="ba_date" class="w5"><span class="hint" style="margin:0">預設今天</span></div></div>
         <div class="row">
-          <div class="field"><label>CA</label><input type="text" data-f="ca" class="w3"><span class="unit">y</span></div>
-          <div class="field"><label>SD</label><input type="text" data-f="sd" class="w3"></div>
+          <div class="field"><label>BA</label><input type="text" data-f="ba" class="w4" placeholder="8y6m"></div>
+          <div class="field"><label>CA</label><span class="calc" id="caAuto">—</span><span class="hint" style="margin:0">依生日自動帶入</span></div>
+          <div class="field"><label>SD</label><span class="calc" id="sdAuto">—</span><span class="hint" style="margin:0">依年齡／性別自動帶入</span></div>
           <div class="field" data-only="pp" style="margin-left:6px"><label>PAH</label><input type="text" data-f="pah" class="w4"><span class="unit">cm</span></div>
         </div>
       </div>
@@ -324,6 +325,20 @@ function setBadge(id,p){const el=document.getElementById(id);if(p==null){el.text
 /* ---- SGA (birth weight for GA). Table pending: paste Table 2 of the 2025 paper. ---- */
 /* Format when provided: BW_GA={m:{ga:[22..42], p:[[P3,P10,P25,P50,P75,P90,P95],...]},f:{...}} */
 const BW_PCT=[5,10,25,50,75,90,95];
+/* ---- Bone age SD reference by chronological age & sex ---- */
+const BA_SD={
+  m:[[1,2.1],[1.5,2.7],[2,4],[2.5,5.4],[3,6],[3.5,6.6],[4,7],[4.5,7.8],[5,8.4],[5.5,9.1],[6,9.3],[7,10.1],[8,10.8],[9,11],[10,11.4],[11,10.5],[12,10.4],[13,11.1],[14,12],[15,14.2],[16,15.1],[17,15.4]],
+  f:[[1,2.7],[1.5,3.4],[2,4],[2.5,4.8],[3,5.6],[3.5,6.5],[4,7.2],[4.5,8],[5,8.6],[5.5,8.9],[6,9],[7,8.3],[8,8.8],[9,9.3],[10,10.8],[11,12.3],[12,14],[13,14.6],[14,12.6],[15,11.2]],
+};
+function sdForAge(sex,ageYears){
+  const tbl=BA_SD[sex];if(ageYears==null||isNaN(ageYears))return null;
+  if(ageYears<=tbl[0][0])return tbl[0][1];
+  if(ageYears>=tbl[tbl.length-1][0])return tbl[tbl.length-1][1];
+  let i=0;while(tbl[i+1][0]<ageYears)i++;
+  const [a0,v0]=tbl[i],[a1,v1]=tbl[i+1];
+  const f=(ageYears-a0)/(a1-a0);
+  return v0+(v1-v0)*f;
+}
 const BW_Z=[-1.6449,-1.2816,-0.6745,0,0.6745,1.2816,1.6449];
 const BW_GA={m:{ga:[22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42],p:[[379.5,411.9,458.5,507.4,557.8,605.5,632.0],[441.4,488.8,545.4,601.5,659.9,711.4,744.6],[507.6,558.6,632.1,696.7,763.1,821.3,856.2],[585.2,636.3,724.5,800.3,874.7,940.2,981.3],[665.6,721.9,822.7,914.3,1001.5,1073.4,1124.3],[743.9,812.8,929.4,1041.3,1143.5,1224.6,1286.1],[826.0,913.9,1052.4,1184.6,1299.4,1395.4,1469.4],[919.9,1022.5,1191.9,1340.7,1469.6,1586.3,1672.1],[1036.9,1145.6,1343.4,1505.7,1651.1,1790.1,1884.5],[1184.9,1303.1,1510.6,1683.7,1842.4,1997.6,2100.8],[1356.0,1489.4,1696.3,1877.2,2047.6,2213.6,2325.9],[1543.4,1686.3,1894.6,2082.5,2267.4,2444.9,2562.8],[1753.8,1894.4,2101.1,2299.1,2499.1,2688.8,2810.1],[1984.8,2115.3,2316.1,2525.9,2737.8,2937.8,3064.6],[2215.1,2335.1,2531.9,2748.4,2968.8,3174.4,3307.6],[2418.1,2530.5,2725.9,2942.5,3168.1,3375.1,3511.8],[2575.5,2684.5,2879.0,3094.7,3323.4,3531.9,3669.1],[2677.6,2798.9,2982.9,3211.3,3430.9,3654.4,3779.4],[2732.5,2868.9,3043.5,3285.8,3496.0,3734.0,3847.8],[2808.5,2890.0,3126.0,3309.0,3589.0,3759.0,3948.5],[2828.5,2883.9,3177.0,3307.4,3666.5,3758.6,4065.0]]},f:{ga:[22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42],p:[[368.8,397.8,437.5,490.0,532.8,590.0,613.8],[437.8,471.1,519.4,576.3,622.5,677.9,707.3],[499.6,543.7,601.3,664.1,720.1,774.8,811.2],[551.0,613.9,688.2,757.5,828.4,889.8,930.8],[601.2,676.2,776.5,858.4,947.5,1022.1,1065.5],[656.9,733.9,862.9,971.3,1076.8,1171.4,1220.4],[724.8,805.1,958.3,1100.6,1222.4,1337.8,1396.9],[821.9,910.6,1083.3,1250.6,1388.4,1517.4,1590.0],[952.1,1048.1,1239.4,1419.3,1567.5,1706.5,1796.3],[1094.5,1198.8,1407.2,1598.0,1755.4,1907.6,2015.7],[1241.8,1361.3,1581.6,1783.9,1956.9,2125.9,2249.0],[1417.2,1549.9,1775.8,1984.3,2174.4,2359.9,2490.7],[1635.0,1769.4,1993.0,2201.5,2404.6,2601.7,2735.3],[1875.6,2005.4,2219.1,2425.6,2639.4,2843.6,2978.1],[2110.6,2234.9,2435.6,2641.3,2862.3,3071.5,3203.6],[2316.3,2432.1,2624.7,2830.6,3053.1,3265.0,3393.3],[2475.6,2582.6,2774.2,2980.6,3202.8,3415.6,3542.4],[2580.0,2695.2,2876.5,3095.6,3307.5,3533.7,3648.7],[2637.5,2774.4,2936.4,3187.0,3371.3,3632.2,3715.4],[2715.0,2814.1,3018.5,3262.8,3462.5,3734.4,3815.0],[2735.0,2828.1,3062.5,3338.4,3530.0,3876.3,3925.0]]}};
 function parseGA(s){s=(s||"").trim();if(!s)return null;const m=s.match(/^(\d+(?:\.\d+)?)(?:\+(\d+))?$/);if(!m)return null;return parseFloat(m[1])+(m[2]?(+m[2])/7:0);}
@@ -563,17 +578,24 @@ function render(){
 
   const gLines=growthLines();
   const baDate=has("ba_date")?t("ba_date"):todayCompact();
+  const caAutoEl=document.getElementById("caAuto");
+  caAutoEl.textContent=age||"—";
+  const caOut=age||"";
+  const sdAutoEl=document.getElementById("sdAuto");
+  const sdVal=ageM!==null?sdForAge(S.sex,ageM/12):null;
+  const sdOut=sdVal!==null?sdVal.toFixed(1):"";
+  sdAutoEl.textContent=sdOut||"—";
 
   let oLines=[`BH ${t("bh")} (P${bhP}), BW ${t("bw")} (P${bwP})`];
   if(bmiStr)oLines.push(`BMI ${bmiStr}${bmiP?` (P${bmiP})`:""}`);
   if(S.tpl==="pp"){
     oLines.push("<PE>","HEENT: pink conjunctiva","Thyroid: not palpable",`Skin: ${parts("skin").join(", ")}`,genital);
     if(gLines.length)oLines.push("",...gLines);
-    oLines.push("",`Bone age(${baDate}): (CA ${t("ca")} SD ${t("sd")}) PAH ${t("pah")} ()`);
+    oLines.push("",`Bone age(${baDate}): ${t("ba")} (CA ${caOut} SD ${sdOut}) PAH ${t("pah")} ()`);
   }else{
     oLines.push("HEENT: conjunctiva not pale","Thyroid: not palpable","Chest: bilateral clear breathing sound","Heart: RHB, no murmur","Abdomen: soft and flat, normoactive bowel sound","Ext: freely movable",`Skin: ${parts("skin").join(", ")}`,genital,"",`Dysmorphic stigmata: ${parts("dysmorphic").join(", ")}`);
     if(gLines.length)oLines.push("",...gLines);
-    oLines.push("",`Bone age(${baDate}): (CA ${t("ca")} SD ${t("sd")})`);
+    oLines.push("",`Bone age(${baDate}): ${t("ba")} (CA ${caOut} SD ${sdOut})`);
   }
   document.getElementById("oBox").value=oLines.join("\n");
 
