@@ -385,6 +385,7 @@ function parseBday(str){
 }
 function ageStr(b){if(!b)return"";const t=new Date();let mo=(t.getFullYear()-b.y)*12+(t.getMonth()+1-b.m);if(t.getDate()<b.d)mo--;if(mo<0)return"";return `${Math.floor(mo/12)}y${mo%12}m`;}
 function rocBday(b){return b?`${b.y-1911}/${pad(b.m)}/${pad(b.d)}`:"";}
+function westBday(b){return b?`${b.y}/${pad(b.m)}/${pad(b.d)}`:"";}
 
 /* chips */
 document.querySelectorAll(".chips").forEach(box=>{
@@ -489,7 +490,7 @@ function render(){
   const pInfo=document.getElementById("parsedInfo");
   if(has("name")||has("chart")||has("bday")){
     const bits=[];if(has("name"))bits.push("姓名 "+t("name"));if(has("chart"))bits.push("病歷號 "+t("chart"));
-    if(b)bits.push("生日 "+rocBday(b)+(age?" · "+age:""));else if(has("bday"))bits.push("生日無法辨識");
+    if(b)bits.push("生日 "+westBday(b)+(age?" · "+age:""));else if(has("bday"))bits.push("生日無法辨識");
     bits.push(S.sex==="m"?"男":"女");pInfo.textContent=bits.join(" · ");
   } else pInfo.textContent="直接把病人那行貼進來，會自動辨識姓名／病歷號／生日／性別。";
 
@@ -578,13 +579,13 @@ function render(){
 
   const sexMF=S.sex==="m"?"M":"F";
   const gs=[];
-  if(has("name")) gs.push(`Name: ${t("name")}`);
-  if(has("chart")) gs.push(`Chart No: ${t("chart")}`);
-  if(b) gs.push(`Birthday: ${rocBday(b)}`);
-  gs.push(`Sex: ${sexMF}`);
+  if(has("name")) gs.push(t("name"));
+  if(has("chart")) gs.push(t("chart"));
+  if(b) gs.push(westBday(b));
+  gs.push(sexMF);
   const faH=t("fa_ht"),moH=t("mo_ht");
-  if(faH) gs.push(`Father height: ${faH} cm`);
-  if(moH) gs.push(`Mother height: ${moH} cm`);
+  if(faH) gs.push(`Father's height: ${faH} cm`);
+  if(moH) gs.push(`Mother's height: ${moH} cm`);
   if(gLines.length) gs.push("",...gLines);
   document.getElementById("gsBox").value=gs.join("\n");
 }
