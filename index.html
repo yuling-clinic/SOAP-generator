@@ -112,6 +112,7 @@
     <div class="field"><span class="seg-label">性別</span>
       <div class="seg gender" id="sexSeg"><button data-sex="f" class="on">女</button><button data-sex="m">男</button></div></div>
     <button class="ghost" id="resetBtn">清除</button>
+    <button class="ghost" id="transferBtn" style="background:#0F6E6E;color:#fff;border-color:#0F6E6E">🚀 傳到生長曲線</button>
   </div>
 </header>
 
@@ -626,6 +627,83 @@ function initBaDate(){const el=document.querySelector('[data-f="ba_date"]');el.v
 S.ccConn="for";
 document.querySelector('[data-f="cc_sign"]').value=CC_DEFAULT.pp;S.txt.cc_sign=CC_DEFAULT.pp;
 initBaDate();applyVisibility();syncSegUI();render();
+
+/* ==== Transfer to Growth-Chart tool (same-origin localStorage handoff) ==== */
+function parseBoneAgeYm(str){
+  if(!str)return null;
+  const m=String(str).trim().match(/^(\d+)y(?:(\d+)m)?$/i);
+  if(!m)return null;
+  return parseInt(m[1])+(m[2]?parseInt(m[2])/12:0);
+}
+function bdayToISO(str){
+  const p=parseBday(str);if(!p)return null;
+  return `${p.y}-${String(p.m).padStart(2,"0")}-${String(p.d).padStart(2,"0")}`;
+}
+function compactToISO(str){
+  if(!str)return null;
+  str=String(str).trim();
+  if(/^\d{8}$/.test(str))return `${str.slice(0,4)}-${str.slice(4,6)}-${str.slice(6,8)}`;
+  if(/^\d{4}[-/.]\d{1,2}[-/.]\d{1,2}$/.test(str)){
+    const [y,m,d]=str.replace(/[/.]/g,"-").split("-");
+    return `${y}-${m.padStart(2,"0")}-${d.padStart(2,"0")}`;
+  }
+  return null;
+}
+document.getElementById("transferBtn").addEventListener("click",()=>{
+  const name=(S.txt.name||"").trim();
+  const chartNo=(S.txt.chart||"").trim();
+  const birthISO=bdayToISO(S.txt.bday);
+  if(!name||!chartNo||!birthISO){
+    alert("請先貼上病人資料（需要姓名、病歷號、生日）");
+    return;
+  }
+  const h=parseFloat(S.txt.bh),w=parseFloat(S.txt.bw);
+  const baValue=parseBoneAgeYm(S.txt.ba);
+  const hasCurrentVisit=!!(h||w||baValue!=null);
+  // Collect growth records (semester-based history)
+  const growthRecords=[];
+  for(const sem of SEMS){
+    const g=S.growth[sem];
+    if(!g)continue;
+    const gh=parseFloat(g.ht),gw=parseFloat(g.wt);
+    if(gh||gw){
+      growthRecords.push({semester:sem,height:gh||null,weight:gw||null});
+    }
+  }
+  if(!hasCurrentVisit&&growthRecords.length===0){
+    alert("沒有可傳送的資料（需要至少填寫身高、體重、骨齡或學期別生長紀錄其中一項）");
+    return;
+  }
+  const baDateISO=compactToISO(S.txt.ba_date);
+  const today=new Date();
+  const measureDate=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
+  const payload={
+    v:2,
+    timestamp:Date.now(),
+    source:"SOAP-generator",
+    chartNo,name,
+    sex:S.sex==="f"?"girl":"boy",
+    birth:birthISO,
+    fatherH:parseFloat(S.txt.fa_ht)||null,
+    motherH:parseFloat(S.txt.mo_ht)||null,
+    measureDate,
+    height:h||null,
+    weight:w||null,
+    boneAge:baValue,
+    boneAgeDate:baDateISO,
+    pah:parseFloat(S.txt.pah)||null,
+    growthRecords,
+  };
+  try{
+    localStorage.setItem("pending_growth_transfer",JSON.stringify(payload));
+  }catch(e){
+    alert("無法寫入本機儲存：" + e.message);
+    return;
+  }
+  const targetBase=window.location.origin+"/growth-chart/";
+  const targetUrl=targetBase+"?transfer=1&t="+Date.now();
+  window.open(targetUrl,"_blank");
+});
 </script>
 </body>
 </html>
