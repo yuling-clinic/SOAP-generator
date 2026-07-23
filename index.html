@@ -381,7 +381,7 @@ const FIND={
 };
 const NOTE_GROUPS={drug_pp:true,drug_ss:true,skin:true};
 const SYSDZ_TAGS=["asthma","allergic rhinitis","atopic dermatitis","ADHD"];
-const SEMS=["小一上","小一下","小二上","小二下","小三上","小三下","小四上","小四下","小五上","小五下","小六上","小六下","國一上","國一下","國二上","國二下","國三上","國三下"];
+const SEMS=["幼小上","幼小下","幼中上","幼中下","幼大上","幼大下","小一上","小一下","小二上","小二下","小三上","小三下","小四上","小四下","小五上","小五下","小六上","小六下","國一上","國一下","國二上","國二下","國三上","國三下"];
 
 const S={tpl:"pp",sex:"f",find:{},note:{},txt:{},tags:new Set(),growth:{},
   seg:{delivery:"NSD",dms:"not delayed",breastside:"left"},
@@ -425,7 +425,7 @@ document.querySelectorAll(".tanner").forEach(box=>{
 });
 /* growth grid */
 const gg=document.getElementById("growthGrid");
-[[0,9],[9,18]].forEach(([a,b])=>{
+[[0,12],[12,24]].forEach(([a,b])=>{
   const tbl=document.createElement("table");tbl.className="growth";
   tbl.innerHTML="<thead><tr><th>學期</th><th>Ht(cm)</th><th>Wt(kg)</th></tr></thead>";
   const tb=document.createElement("tbody");
