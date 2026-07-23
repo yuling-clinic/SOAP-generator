@@ -212,6 +212,7 @@
         <div class="row"><span class="lead">Father</span><input type="text" data-f="fa_ht" class="w4"><span class="unit">cm</span><div class="chips" data-group="fa" style="margin-left:4px"></div></div>
         <div class="row"><span class="lead">Mother</span><input type="text" data-f="mo_ht" class="w4"><span class="unit">cm</span><span class="lead" style="margin-left:6px">menarche at</span><input type="text" data-f="mo_men" class="w3"><span class="unit">y</span></div>
         <div class="row"><span class="lead">Target height</span><input type="text" data-f="th" class="w4" placeholder="auto"><span class="unit">cm</span><span class="calc" id="thCalc"></span></div>
+        <div class="row" style="align-items:flex-start"><span class="lead" style="padding-top:6px">備註</span><textarea data-f="fa_note" rows="2" placeholder="家族史備註（自由填寫）" style="flex:1;padding:5px 8px;border:1px solid #d6d3d1;border-radius:6px;font-family:inherit;font-size:13px;resize:vertical;min-height:32px"></textarea></div>
       </div>
     </div>
 
@@ -686,6 +687,7 @@ document.getElementById("transferBtn").addEventListener("click",()=>{
     birth:birthISO,
     fatherH:parseFloat(S.txt.fa_ht)||null,
     motherH:parseFloat(S.txt.mo_ht)||null,
+    familyNote:(S.txt.fa_note||"").trim()||null,
     measureDate,
     height:h||null,
     weight:w||null,
